@@ -78,12 +78,9 @@ class MockGtk {
   MOCK_METHOD(void,
               atk_object_notify_state_change,
               (AtkObject * accessible, AtkState state, gboolean value));
-<<<<<<< HEAD
-=======
   MOCK_METHOD(void,
               g_object_set,
               (GObject * object, const gchar* property_name, gint value));
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
 
   GThread* thread;
 };

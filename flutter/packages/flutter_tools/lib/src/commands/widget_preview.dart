@@ -405,15 +405,11 @@ final class WidgetPreviewStartCommand extends WidgetPreviewSubCommandBase with C
       logger.printTrace('Connecting to existing DTD instance at: $existingDtdUri...');
       await _dtdService.connect(dtdWsUri: existingDtdUri);
     }
-<<<<<<< HEAD
-    _previewCodeGenerator.populateDtdConnectionInfo(_dtdService.dtdUri!);
-=======
     _previewCodeGenerator.populateDtdConnectionInfo(
       dtdUri: _dtdService.dtdUri!,
       widgetPreviewServiceName: _dtdService.widgetPreviewService,
       widgetPreviewScaffoldStreamName: _dtdService.widgetPreviewScaffoldStream,
     );
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
   }
 
   Future<int> runPreviewEnvironment({required FlutterProject widgetPreviewScaffoldProject}) async {
@@ -524,15 +520,12 @@ final class WidgetPreviewStartCommand extends WidgetPreviewSubCommandBase with C
           // TODO(bkonyi): consider removing if we stop placing the scaffold in $TMP.
           // See https://github.com/flutter/flutter/issues/179036
           projectRootPath: widgetPreviewScaffoldProject.directory.absolute.path,
-<<<<<<< HEAD
-=======
         );
         unawaited(
           _widgetPreviewApp!.run(
             appStartedCompleter: appStarted,
             connectionInfoCompleter: connectionInfo,
           ),
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
         );
         await appStarted.future;
         logger.sendStartedEvent(applicationUrl: flutterDevice.devFS!.baseUri!);

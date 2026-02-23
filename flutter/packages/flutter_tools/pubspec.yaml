@@ -13,15 +13,9 @@ dependencies:
   analyzer: 9.0.0
   archive: 3.6.1
   args: 2.7.0
-<<<<<<< HEAD
-  dds: 5.0.3
-  dwds: 25.1.0+2
-  code_builder: 4.11.0
-=======
   dds: 5.1.0
   dwds: 26.2.3
   code_builder: 4.11.1
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
   collection: 1.19.1
   completion: 1.0.2
   coverage: 1.15.0
@@ -133,9 +127,5 @@ dev_dependencies:
 dartdoc:
   # Exclude this package from the hosted API docs.
   nodoc: true
-<<<<<<< HEAD
-# PUBSPEC CHECKSUM: s8p858
-=======
 
 # PUBSPEC CHECKSUM: 3bnrvh
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a

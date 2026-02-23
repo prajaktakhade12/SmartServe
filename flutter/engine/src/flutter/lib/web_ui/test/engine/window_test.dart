@@ -523,11 +523,7 @@ void testMain() {
 
   test('SingletonFlutterWindow implements locale, locales, and locale change notifications', () {
     // This will count how many times we notified about locale changes.
-<<<<<<< HEAD
-    int localeChangedCount = 0;
-=======
     var localeChangedCount = 0;
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
     myWindow.onLocaleChanged = () {
       localeChangedCount += 1;
     };

@@ -337,8 +337,6 @@ class IOSCoreDeviceControl {
     'Failed to execute code (error: EXC_BAD_ACCESS, debugger assist: not detected)',
   ];
 
-  static const kCoreDeviceLaunchCompleteLog = 'Waiting for the application to terminate';
-
   /// Executes `devicectl` command to get list of devices. The command will
   /// likely complete before [timeout] is reached. If [timeout] is reached,
   /// the command will be stopped as a failure.
@@ -655,30 +653,16 @@ class IOSCoreDeviceControl {
   /// If [attachToConsole] is true, attaches the application to the console and waits for the app
   /// to terminate.
   ///
-<<<<<<< HEAD
-  /// When [jsonOutputFile] is provided, devicectl will write a JSON file with the command results
-  /// after the command has completed. This will not have the results when using [attachToConsole]
-  /// until the process has exited.
-  ///
-  /// When [logOutputFile] is provided, devicectl will write all logging otherwise passed to
-  /// stdout/stderr to the file. It will also continue to stream the logs to stdout/stderr.
-=======
   /// If [interactiveMode] is true, runs the process in interactive mode (via script) to convince
   /// devicectl it has a terminal attached in order to redirect stdout.
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
   List<String> _launchAppCommand({
     required String deviceId,
     required String bundleId,
     List<String> launchArguments = const <String>[],
     bool startStopped = false,
     bool attachToConsole = false,
-<<<<<<< HEAD
-    File? jsonOutputFile,
-    File? logOutputFile,
-=======
     File? outputFile,
     bool interactiveMode = false,
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
   }) {
     return <String>[
       if (interactiveMode) ...<String>['script', '-t', '0', '/dev/null'],
@@ -697,8 +681,7 @@ class IOSCoreDeviceControl {
         // See https://github.com/llvm/llvm-project/blob/19b43e1757b4fd3d0f188cf8a08e9febb0dbec2f/lldb/source/Plugins/Platform/MacOSX/PlatformDarwin.cpp#L1227-L1233
         '{"OS_ACTIVITY_DT_MODE": "enable"}',
       ],
-      if (jsonOutputFile != null) ...<String>['--json-output', jsonOutputFile.path],
-      if (logOutputFile != null) ...<String>['--log-output', logOutputFile.path],
+      if (outputFile != null) ...<String>['--json-output', outputFile.path],
       bundleId,
       if (launchArguments.isNotEmpty) ...launchArguments,
     ];
@@ -727,7 +710,7 @@ class IOSCoreDeviceControl {
       deviceId: deviceId,
       launchArguments: launchArguments,
       startStopped: startStopped,
-      jsonOutputFile: output,
+      outputFile: output,
     );
 
     try {
@@ -779,9 +762,6 @@ class IOSCoreDeviceControl {
       return false;
     }
 
-    final Directory tempDirectory = _fileSystem.systemTempDirectory.createTempSync('core_devices.');
-    final File output = tempDirectory.childFile('launch_log.txt')..createSync();
-
     final launchCompleter = Completer<bool>();
     final List<String> command = _launchAppCommand(
       bundleId: bundleId,
@@ -789,13 +769,9 @@ class IOSCoreDeviceControl {
       launchArguments: launchArguments,
       startStopped: startStopped,
       attachToConsole: true,
-<<<<<<< HEAD
-      logOutputFile: output,
-=======
       interactiveMode: true,
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
     );
-    Timer? timer;
+
     try {
       final Process launchProcess = await _processUtils.start(command);
       coreDeviceLogForwarder.launchProcess = launchProcess;
@@ -812,7 +788,7 @@ class IOSCoreDeviceControl {
               _logger.printTrace(line);
             }
 
-            if (!launchCompleter.isCompleted && line.contains(kCoreDeviceLaunchCompleteLog)) {
+            if (line.contains('Waiting for the application to terminate')) {
               launchCompleter.complete(true);
             }
           });
@@ -845,34 +821,14 @@ class IOSCoreDeviceControl {
             }),
       );
 
-<<<<<<< HEAD
-      // Sometimes devicectl launch logs don't stream to stdout.
-      // As a workaround, we also use the log output file to check if it has finished launching.
-      timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-        if (await output.exists()) {
-          final String contents = await output.readAsString();
-          if (!launchCompleter.isCompleted && contents.contains(kCoreDeviceLaunchCompleteLog)) {
-            launchCompleter.complete(true);
-          }
-        }
-      });
-
-      // Do not return the launchCompleter.future directly, otherwise, the timer will be canceled
-      // prematurely.
-      final bool status = await launchCompleter.future;
-      return status;
-=======
       // devicectl is running in an interactive shell.
       // Signal script child jobs to exit and exit the shell.
       // See https://linux.die.net/Bash-Beginners-Guide/sect_12_01.html#sect_12_01_01_02.
       shutdownHooks.addShutdownHook(() => launchProcess.kill());
       return launchCompleter.future;
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
     } on ProcessException catch (err) {
       _logger.printTrace('Error executing devicectl: $err');
       return false;
-    } finally {
-      timer?.cancel();
     }
   }
 

@@ -14,12 +14,6 @@ import 'package:flutter/widget_previews.dart';
 
 import 'package:stack_trace/stack_trace.dart';
 import 'package:url_launcher/url_launcher.dart';
-<<<<<<< HEAD:packages/flutter_tools/test/widget_preview_scaffold.shard/widget_preview_scaffold/lib/src/widget_preview_rendering.dart
-import 'package:widget_preview_scaffold/src/dtd/editor_service.dart';
-import 'package:widget_preview_scaffold/src/theme/ide_theme.dart';
-import 'package:widget_preview_scaffold/src/theme/theme.dart';
-
-=======
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:widget_preview_scaffold/src/dtd/editor_service.dart';
@@ -27,7 +21,6 @@ import 'package:widget_preview_scaffold/src/split.dart';
 import 'package:widget_preview_scaffold/src/theme/ide_theme.dart';
 import 'package:widget_preview_scaffold/src/theme/theme.dart';
 
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a:dev/integration_tests/widget_preview_scaffold/lib/src/widget_preview_rendering.dart
 import 'package:widget_preview_scaffold/src/controls.dart';
 import 'package:widget_preview_scaffold/src/generated_preview.dart';
 import 'package:widget_preview_scaffold/src/utils.dart';

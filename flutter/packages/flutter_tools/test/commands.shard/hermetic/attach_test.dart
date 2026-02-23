@@ -1598,14 +1598,7 @@ class FakeHotRunner extends Fake implements HotRunner {
   late Future<int> Function(Completer<DebugConnectionInfo>?, Completer<void>?, bool) onAttach;
 
   @override
-<<<<<<< HEAD
-  var flutterDevices = <FlutterDevice>[];
-
-  @override
-  var exited = false;
-=======
   List<FlutterDevice> flutterDevices = <FlutterDevice>[];
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
 
   @override
   bool exited = false;

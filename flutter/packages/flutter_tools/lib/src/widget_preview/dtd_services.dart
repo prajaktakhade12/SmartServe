@@ -84,9 +84,6 @@ class WidgetPreviewDtdServices {
 
   static const kWidgetPreviewConnectedEvent = 'Connected';
 
-  static const kWidgetPreviewScaffoldStream = 'WidgetPreviewScaffold';
-  static const kWidgetPreviewConnectedEvent = 'Connected';
-
   /// Error code for RpcException thrown when attempting to load a key from
   /// persistent preferences that doesn't have an entry.
   static const kNoValueForKey = 200;
@@ -175,25 +172,13 @@ class WidgetPreviewDtdServices {
 
   Future<void> _registerServices() async {
     final DartToolingDaemon dtd = _dtd!;
-<<<<<<< HEAD
-    dtd.onEvent(kWidgetPreviewScaffoldStream).listen((DTDEvent event) {
-      if (event case DTDEvent(
-        stream: kWidgetPreviewScaffoldStream,
-        kind: kWidgetPreviewConnectedEvent,
-      )) {
-=======
     dtd.onEvent(widgetPreviewScaffoldStream).listen((DTDEvent event) {
       if (event.kind == kWidgetPreviewConnectedEvent) {
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
         previewAnalytics.reportPreviewerConnected();
       }
     });
     await Future.wait(<Future<void>>[
-<<<<<<< HEAD
-      dtd.streamListen(kWidgetPreviewScaffoldStream),
-=======
       dtd.streamListen(widgetPreviewScaffoldStream),
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
       for (final (String method, DTDServiceCallback callback) in services)
         dtd
             .registerService(widgetPreviewService, method, callback)

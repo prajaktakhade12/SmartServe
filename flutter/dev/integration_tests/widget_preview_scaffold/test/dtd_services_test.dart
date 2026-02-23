@@ -17,17 +17,10 @@ import 'package:flutter_tools/src/widget_preview/persistent_preferences.dart';
 import 'package:test/fake.dart';
 import 'package:widget_preview_scaffold/src/dtd/dtd_services.dart';
 
-<<<<<<< HEAD:packages/flutter_tools/test/widget_preview_scaffold.shard/widget_preview_scaffold/test/dtd_services_test.dart
-import '../../../src/common.dart';
-import '../../../src/context.dart';
-import '../../../src/fakes.dart';
-import '../../../commands.shard/permeable/utils/project_testing_utils.dart';
-=======
 import '../../../../packages/flutter_tools/test/src/common.dart';
 import '../../../../packages/flutter_tools/test/src/context.dart';
 import '../../../../packages/flutter_tools/test/src/fakes.dart';
 import '../../../../packages/flutter_tools/test/commands.shard/permeable/utils/project_testing_utils.dart';
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a:dev/integration_tests/widget_preview_scaffold/test/dtd_services_test.dart
 
 class FakeFlutterProject extends Fake implements FlutterProject {
   FakeFlutterProject();
@@ -82,27 +75,7 @@ void main() {
         // Start DTD and register the widget preview DTD services with a custom handler for hot
         // restart requests.
         final hotRestartRequestCompleter = Completer<void>();
-<<<<<<< HEAD:packages/flutter_tools/test/widget_preview_scaffold.shard/widget_preview_scaffold/test/dtd_services_test.dart
-        dtdServer = WidgetPreviewDtdServices(
-          previewAnalytics: WidgetPreviewAnalytics(
-            analytics: getInitializedFakeAnalyticsInstance(
-              // We don't care about anything written to the file system by analytics, so we're safe
-              // to use a different file system here.
-              fs: MemoryFileSystem.test(),
-              fakeFlutterVersion: FakeFlutterVersion(),
-            ),
-          ),
-          fs: MemoryFileSystem.test(),
-          logger: logger,
-          shutdownHooks: ShutdownHooks(),
-          dtdLauncher: DtdLauncher(
-            logger: logger,
-            artifacts: globals.artifacts!,
-            processManager: globals.processManager,
-          ),
-=======
         dtdServer = await launchDtdServer(
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a:dev/integration_tests/widget_preview_scaffold/test/dtd_services_test.dart
           onHotRestartPreviewerRequest: hotRestartRequestCompleter.complete,
         );
 
@@ -143,31 +116,7 @@ void main() {
     testUsingContext(
       'can set and retreive values from $PersistentPreferences',
       () async {
-<<<<<<< HEAD:packages/flutter_tools/test/widget_preview_scaffold.shard/widget_preview_scaffold/test/dtd_services_test.dart
-        dtdServer = WidgetPreviewDtdServices(
-          previewAnalytics: WidgetPreviewAnalytics(
-            analytics: getInitializedFakeAnalyticsInstance(
-              // We don't care about anything written to the file system by analytics, so we're safe
-              // to use a different file system here.
-              fs: MemoryFileSystem.test(),
-              fakeFlutterVersion: FakeFlutterVersion(),
-            ),
-          ),
-          fs: MemoryFileSystem.test(),
-          logger: logger,
-          shutdownHooks: ShutdownHooks(),
-          dtdLauncher: DtdLauncher(
-            logger: logger,
-            artifacts: globals.artifacts!,
-            processManager: globals.processManager,
-          ),
-          onHotRestartPreviewerRequest: () {},
-          project: FakeFlutterProject(),
-        );
-        await dtdServer.launchAndConnect();
-=======
         dtdServer = await launchDtdServer();
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a:dev/integration_tests/widget_preview_scaffold/test/dtd_services_test.dart
 
         // The properties file should be created by the PersistentProperties constructor.
         final File preferencesFile = dtdServer.preferences.file;

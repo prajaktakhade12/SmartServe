@@ -951,13 +951,8 @@ class ResidentWebRunner extends ResidentRunner {
           connectionInfoCompleter?.complete(
             DebugConnectionInfo(
               wsUri: websocketUri,
-<<<<<<< HEAD
-              devToolsUri: Uri.tryParse(debugConnection.devToolsUri ?? ''),
-              dtdUri: Uri.tryParse(debugConnection.dtdUri ?? ''),
-=======
               devToolsUri: debugConnection.devToolsUri?.toUri(),
               dtdUri: debugConnection.dtdUri?.toUri(),
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
             ),
           );
         }),

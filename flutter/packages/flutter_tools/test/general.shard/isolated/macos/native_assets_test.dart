@@ -415,8 +415,6 @@ void main() {
   );
 
   testUsingContext(
-<<<<<<< HEAD
-=======
     'NativeAssetsBuildRunnerImpl.cCompilerConfig Nix installation',
     overrides: <Type, Generator>{
       ProcessManager: () => FakeProcessManager.list(<FakeCommand>[
@@ -440,7 +438,6 @@ void main() {
   );
 
   testUsingContext(
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
     'missing xcode when required',
     overrides: <Type, Generator>{
       ProcessManager: () => FakeProcessManager.list(<FakeCommand>[

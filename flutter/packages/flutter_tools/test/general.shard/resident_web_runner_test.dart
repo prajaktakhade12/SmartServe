@@ -262,8 +262,6 @@ name: my_app
       expect(logger.statusText, contains('Debug service listening on ws://127.0.0.1/abcd/'));
       expect(debugConnectionInfo.wsUri.toString(), 'ws://127.0.0.1/abcd/');
       expect(debugConnectionInfo.dtdUri.toString(), 'ws://127.0.0.1/efgh/');
-<<<<<<< HEAD
-=======
     },
     overrides: <Type, Generator>{
       FileSystem: () => fileSystem,
@@ -282,7 +280,6 @@ name: my_app
       webDevFS.exception = DartDevelopmentServiceException.failedToStart();
 
       await expectLater(residentWebRunner.run(), throwsToolExit());
->>>>>>> 90673a4eef275d1a6692c26ac80d6d746d41a73a
     },
     overrides: <Type, Generator>{
       FileSystem: () => fileSystem,

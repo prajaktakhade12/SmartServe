@@ -7,7 +7,7 @@ class ApiService {
   // For emulator use: 10.0.2.2:8000
   // For physical device (USB reverse): 127.0.0.1:8000
   // For physical device (WiFi): 192.168.x.x:8000
-  static const String baseUrl = "http:// 192.168.1.7:8000/api";
+  static const String baseUrl = "http://192.168.1.8:8000/api";
 
   // ─────────────────────────────────────────────
   //  CREATE ISSUE (with optional image)
@@ -146,7 +146,7 @@ class ApiService {
       }
       return {'error': body['error'] ?? 'Something went wrong'};
     } catch (e) {
-      return {'error': 'Invalid response'};
+      return {'error': 'Invalid response: ${response.body}'};
     }
   }
 }

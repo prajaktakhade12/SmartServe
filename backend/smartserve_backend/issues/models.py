@@ -2,7 +2,6 @@ from django.db import models
 
 
 class Issue(models.Model):
-
     CATEGORY_CHOICES = [
         ('ROAD', 'Road'),
         ('WATER', 'Water'),
@@ -20,31 +19,17 @@ class Issue(models.Model):
         ('COMPLETED', 'Completed'),
     ]
 
-    # User Details (mobile acts as user identifier)
-    name = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=10)
-
-    # Issue Details
-    title = models.CharField(max_length=200)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    description = models.TextField()
-    location = models.CharField(max_length=255)
+    name = models.CharField(max_length=100, default='')
+    mobile = models.CharField(max_length=10, default='')
+    title = models.CharField(max_length=200, default='')
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='OTHER')
+    description = models.TextField(default='')
+    location = models.CharField(max_length=255, default='')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-
-    # Photo
     image = models.ImageField(upload_to='issues/', null=True, blank=True)
-
-    # Status
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='REPORTED'
-    )
-
-    # Officer remarks (set by officer desktop app)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REPORTED')
     officer_remarks = models.TextField(null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,9 +41,9 @@ class Issue(models.Model):
 
 
 class Notification(models.Model):
-    mobile = models.CharField(max_length=10)
+    mobile = models.CharField(max_length=10, default='')
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
-    message = models.CharField(max_length=255)
+    message = models.CharField(max_length=255, default='')
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

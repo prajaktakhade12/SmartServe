@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'screens/language/language_selection_screen.dart';
+import 'core/user_session.dart';
+import 'screens/login_screen.dart';
+import 'screens/citizen/citizen_home_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Clear old session so login screen always shows fresh
+  await UserSession.logout();
   runApp(const SmartServeApp());
 }
 
@@ -15,7 +20,7 @@ class SmartServeApp extends StatelessWidget {
       title: 'SmartServe',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const LanguageSelectionScreen(),
+      home: const LoginScreen(),
     );
   }
 }

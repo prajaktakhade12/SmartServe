@@ -1,6 +1,5 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 from .models import Issue, Notification
 import json
 
@@ -29,49 +28,50 @@ def create_issue(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    # Handle multipart (with image) or JSON
-    if request.content_type and 'multipart' in request.content_type:
-        data = request.POST
-        image = request.FILES.get('image')
-    else:
-        try:
+    try:
+        if request.content_type and 'multipart' in request.content_type:
+            data = request.POST
+            image = request.FILES.get('image')
+        else:
             data = json.loads(request.body)
-        except Exception:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        image = None
+            image = None
 
-    # Validation
-    required = ['name', 'mobile', 'title', 'category', 'description', 'location']
-    for field in required:
-        if not data.get(field, '').strip():
-            return JsonResponse({'error': f'{field} is required'}, status=400)
+        required = ['name', 'mobile', 'title', 'category', 'description', 'location']
+        for field in required:
+            if not data.get(field, '').strip():
+                return JsonResponse({'error': f'{field} is required'}, status=400)
 
-    if len(data.get('mobile', '')) != 10:
-        return JsonResponse({'error': 'Mobile must be 10 digits'}, status=400)
+        if len(data.get('mobile', '')) != 10:
+            return JsonResponse({'error': 'Mobile must be 10 digits'}, status=400)
 
-    issue = Issue.objects.using('issues_db').create(
-        name=data.get('name'),
-        mobile=data.get('mobile'),
-        title=data.get('title'),
-        category=data.get('category').upper(),
-        description=data.get('description'),
-        location=data.get('location'),
-        latitude=data.get('latitude') or None,
-        longitude=data.get('longitude') or None,
-        image=image,
-    )
+        lat = data.get('latitude')
+        lng = data.get('longitude')
 
-    # Create notification for citizen
-    Notification.objects.using('issues_db').create(
-        mobile=issue.mobile,
-        issue=issue,
-        message=f"Your issue '{issue.title}' has been submitted successfully.",
-    )
+        issue = Issue.objects.using('issues_db').create(
+            name=data.get('name', '').strip(),
+            mobile=data.get('mobile', '').strip(),
+            title=data.get('title', '').strip(),
+            category=data.get('category', '').strip().upper(),
+            description=data.get('description', '').strip(),
+            location=data.get('location', '').strip(),
+            latitude=float(lat) if lat else None,
+            longitude=float(lng) if lng else None,
+            image=image,
+        )
 
-    return JsonResponse({
-        'message': 'Issue submitted successfully',
-        'issue': issue_to_dict(issue)
-    }, status=201)
+        Notification.objects.using('issues_db').create(
+            mobile=issue.mobile,
+            issue=issue,
+            message=f"Your issue '{issue.title}' has been submitted successfully.",
+        )
+
+        return JsonResponse({
+            'message': 'Issue submitted successfully',
+            'issue': issue_to_dict(issue)
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt
@@ -79,7 +79,6 @@ def my_issues(request):
     mobile = request.GET.get('mobile', '').strip()
     if not mobile:
         return JsonResponse({'error': 'mobile parameter required'}, status=400)
-
     issues = Issue.objects.using('issues_db').filter(mobile=mobile)
     return JsonResponse([issue_to_dict(i) for i in issues], safe=False)
 
@@ -95,10 +94,8 @@ def issue_detail(request, issue_id):
 
 @csrf_exempt
 def update_status(request, issue_id):
-    """Used by officer desktop app to update issue status."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-
     try:
         issue = Issue.objects.using('issues_db').get(id=issue_id)
     except Issue.DoesNotExist:
@@ -106,7 +103,6 @@ def update_status(request, issue_id):
 
     data = json.loads(request.body)
     new_status = data.get('status', '').upper()
-
     if new_status not in ['REPORTED', 'IN_PROGRESS', 'COMPLETED']:
         return JsonResponse({'error': 'Invalid status'}, status=400)
 
@@ -114,7 +110,6 @@ def update_status(request, issue_id):
     issue.officer_remarks = data.get('remarks', issue.officer_remarks)
     issue.save(using='issues_db')
 
-    # Notify citizen
     status_msg = {
         'IN_PROGRESS': f"Your issue '{issue.title}' is now being worked on.",
         'COMPLETED': f"Your issue '{issue.title}' has been resolved!",
@@ -122,10 +117,7 @@ def update_status(request, issue_id):
 
     if status_msg:
         Notification.objects.using('issues_db').create(
-            mobile=issue.mobile,
-            issue=issue,
-            message=status_msg,
-        )
+            mobile=issue.mobile, issue=issue, message=status_msg)
 
     return JsonResponse({'message': 'Status updated', 'issue': issue_to_dict(issue)})
 
@@ -135,16 +127,14 @@ def my_notifications(request):
     mobile = request.GET.get('mobile', '').strip()
     if not mobile:
         return JsonResponse({'error': 'mobile required'}, status=400)
-
     notifs = Notification.objects.using('issues_db').filter(mobile=mobile)
     data = [{
         'id': n.id,
         'message': n.message,
         'is_read': n.is_read,
         'issue_id': n.issue_id,
-        'created_at': n.created_at.strftime('%d %b %Y, %I:%M %p'),
+        'created_at': n.created_at.strftime('%d %b %Y, %I:%M %p')
     } for n in notifs]
-
     return JsonResponse(data, safe=False)
 
 
@@ -161,29 +151,27 @@ def mark_notification_read(request, notif_id):
 
 def dashboard(request):
     mobile = request.GET.get('mobile', '').strip()
+    qs = Issue.objects.using('issues_db').filter(mobile=mobile) if mobile else Issue.objects.using('issues_db').all()
 
-    if mobile:
-        qs = Issue.objects.using('issues_db').filter(mobile=mobile)
-    else:
-        qs = Issue.objects.using('issues_db').all()
+    category_counts = {}
+    for cat_key, _ in Issue.CATEGORY_CHOICES:
+        category_counts[cat_key] = qs.filter(category=cat_key).count()
 
     return JsonResponse({
         'total': qs.count(),
         'reported': qs.filter(status='REPORTED').count(),
         'in_progress': qs.filter(status='IN_PROGRESS').count(),
         'completed': qs.filter(status='COMPLETED').count(),
+        'categories': category_counts,
     })
 
 
 def all_issues(request):
-    """For officer desktop app — returns all issues."""
     category = request.GET.get('category', '').strip().upper()
     status = request.GET.get('status', '').strip().upper()
-
     qs = Issue.objects.using('issues_db').all()
     if category:
         qs = qs.filter(category=category)
     if status:
         qs = qs.filter(status=status)
-
     return JsonResponse([issue_to_dict(i) for i in qs], safe=False)

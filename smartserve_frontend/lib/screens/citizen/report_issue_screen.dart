@@ -381,7 +381,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _detectLocation,
                         icon: const Icon(Icons.my_location_rounded, size: 18),
-                        label: const Text("GPS", style: TextStyle(fontSize: 13)),
+                        label: const Text("Current Location", style: TextStyle(fontSize: 12)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.primary,
                           side: const BorderSide(color: AppTheme.primary),
@@ -396,10 +396,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _pickFromMap,
                         icon: const Icon(Icons.map_rounded, size: 18),
-                        label: Text(
-                          AppStrings.text("select_map", lang),
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                        label: const Text("Select on Map", style: TextStyle(fontSize: 12)),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

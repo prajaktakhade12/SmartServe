@@ -1,24 +1,24 @@
 class IssuesRouter:
-    """
-    A router to control all database operations on issue-related models.
-    """
-
-    route_app_labels = {'issues'}
-
     def db_for_read(self, model, **hints):
-        if model._meta.model_name in ['issue', 'feedback', 'notification']:
+        if model._meta.model_name == 'issue':
             return 'issues_db'
-        return None
+        if model._meta.model_name == 'notification':
+            return 'notifications_db'
+        return 'default'
 
     def db_for_write(self, model, **hints):
-        if model._meta.model_name in ['issue', 'feedback', 'notification']:
+        if model._meta.model_name == 'issue':
             return 'issues_db'
-        return None
+        if model._meta.model_name == 'notification':
+            return 'notifications_db'
+        return 'default'
 
     def allow_relation(self, obj1, obj2, **hints):
         return True
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        if model_name in ['issue', 'feedback', 'notification']:
+        if model_name == 'issue':
             return db == 'issues_db'
+        if model_name == 'notification':
+            return db == 'notifications_db'
         return db == 'default'

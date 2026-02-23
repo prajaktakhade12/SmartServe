@@ -1,0 +1,29 @@
+# Flutter SDK
+flutter/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Databases
+*.sqlite3
+
+# Media files
+media/
+
+# Flutter build
+smartserve_frontend/build/
+smartserve_frontend/.dart_tool/
+smartserve_frontend/.flutter-plugins
+smartserve_frontend/.flutter-plugins-dependencies
+smartserve_frontend/.packages
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini

@@ -62,7 +62,11 @@ DATABASES = {
     'issues_db': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'issues_db.sqlite3',
-    }
+    },
+    'notifications_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'notifications_db.sqlite3',
+    },
 }
 
 DATABASE_ROUTERS = ['issues.db_router.IssuesRouter']

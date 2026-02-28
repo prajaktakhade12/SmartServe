@@ -1,10 +1,25 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Issue, Notification
+from .models import Issue, Notification, StatusHistory, IssueComment, CivicPoints
 import json
+import math
 
 
 def issue_to_dict(issue):
+    history = [{
+        'status': h.status,
+        'note': h.note,
+        'changed_at': h.changed_at.strftime('%d %b %Y, %I:%M %p')
+    } for h in issue.history.all()]
+
+    comments = [{
+        'id': c.id,
+        'name': c.name,
+        'mobile': c.mobile,
+        'comment': c.comment,
+        'created_at': c.created_at.strftime('%d %b %Y, %I:%M %p')
+    } for c in issue.comments.all()]
+
     return {
         'id': issue.id,
         'name': issue.name,
@@ -18,16 +33,30 @@ def issue_to_dict(issue):
         'status': issue.status,
         'officer_remarks': issue.officer_remarks or '',
         'image': issue.image.url if issue.image else None,
+        'extra_images': issue.extra_images or '',
+        'rating': issue.rating,
+        'rating_comment': issue.rating_comment or '',
+        'points_awarded': issue.points_awarded,
+        'history': history,
+        'comments': comments,
         'created_at': issue.created_at.strftime('%d %b %Y, %I:%M %p'),
         'updated_at': issue.updated_at.strftime('%d %b %Y, %I:%M %p'),
     }
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Calculate distance in km between two coordinates."""
+    R = 6371
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
 
 @csrf_exempt
 def create_issue(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-
     try:
         if request.content_type and 'multipart' in request.content_type:
             data = request.POST
@@ -59,16 +88,25 @@ def create_issue(request):
             image=image,
         )
 
-        Notification.objects.using('issues_db').create(
-            mobile=issue.mobile,
-            issue=issue,
-            message=f"Your issue '{issue.title}' has been submitted successfully.",
-        )
+        # Create status history entry
+        StatusHistory.objects.using('issues_db').create(
+            issue=issue, status='REPORTED', note='Issue reported by citizen')
 
-        return JsonResponse({
-            'message': 'Issue submitted successfully',
-            'issue': issue_to_dict(issue)
-        })
+        # Create notification
+        Notification.objects.using('issues_db').create(
+            mobile=issue.mobile, issue=issue,
+            message=f"Your issue '{issue.title}' has been submitted successfully.")
+
+        # Award civic points for reporting
+        points, _ = CivicPoints.objects.using('issues_db').get_or_create(
+            mobile=issue.mobile, defaults={'name': issue.name})
+        points.total_points += 10
+        points.issues_reported += 1
+        if not points.name:
+            points.name = issue.name
+        points.save(using='issues_db')
+
+        return JsonResponse({'message': 'Issue submitted successfully', 'issue': issue_to_dict(issue)})
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -78,9 +116,20 @@ def create_issue(request):
 def my_issues(request):
     mobile = request.GET.get('mobile', '').strip()
     if not mobile:
-        return JsonResponse({'error': 'mobile parameter required'}, status=400)
-    issues = Issue.objects.using('issues_db').filter(mobile=mobile)
-    return JsonResponse([issue_to_dict(i) for i in issues], safe=False)
+        return JsonResponse({'error': 'mobile required'}, status=400)
+    category = request.GET.get('category', '').strip().upper()
+    status = request.GET.get('status', '').strip().upper()
+    search = request.GET.get('search', '').strip()
+
+    qs = Issue.objects.using('issues_db').filter(mobile=mobile)
+    if category:
+        qs = qs.filter(category=category)
+    if status:
+        qs = qs.filter(status=status)
+    if search:
+        qs = qs.filter(title__icontains=search)
+
+    return JsonResponse([issue_to_dict(i) for i in qs], safe=False)
 
 
 @csrf_exempt
@@ -110,6 +159,10 @@ def update_status(request, issue_id):
     issue.officer_remarks = data.get('remarks', issue.officer_remarks)
     issue.save(using='issues_db')
 
+    note = data.get('note', '')
+    StatusHistory.objects.using('issues_db').create(
+        issue=issue, status=new_status, note=note)
+
     status_msg = {
         'IN_PROGRESS': f"Your issue '{issue.title}' is now being worked on.",
         'COMPLETED': f"Your issue '{issue.title}' has been resolved!",
@@ -119,7 +172,142 @@ def update_status(request, issue_id):
         Notification.objects.using('issues_db').create(
             mobile=issue.mobile, issue=issue, message=status_msg)
 
+    # Award points when completed
+    if new_status == 'COMPLETED':
+        try:
+            points = CivicPoints.objects.using('issues_db').get(mobile=issue.mobile)
+            points.total_points += 20
+            points.issues_resolved += 1
+            points.save(using='issues_db')
+        except CivicPoints.DoesNotExist:
+            pass
+
     return JsonResponse({'message': 'Status updated', 'issue': issue_to_dict(issue)})
+
+
+@csrf_exempt
+def rate_issue(request, issue_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        issue = Issue.objects.using('issues_db').get(id=issue_id)
+        data = json.loads(request.body)
+        rating = int(data.get('rating', 0))
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': 'Rating must be 1-5'}, status=400)
+        issue.rating = rating
+        issue.rating_comment = data.get('comment', '')
+        issue.save(using='issues_db')
+
+        # Bonus points for rating
+        try:
+            points = CivicPoints.objects.using('issues_db').get(mobile=issue.mobile)
+            points.total_points += 5
+            points.save(using='issues_db')
+        except CivicPoints.DoesNotExist:
+            pass
+
+        return JsonResponse({'message': 'Rating submitted'})
+    except Issue.DoesNotExist:
+        return JsonResponse({'error': 'Not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def add_comment(request, issue_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        issue = Issue.objects.using('issues_db').get(id=issue_id)
+        data = json.loads(request.body)
+        comment_text = data.get('comment', '').strip()
+        if not comment_text:
+            return JsonResponse({'error': 'Comment cannot be empty'}, status=400)
+
+        comment = IssueComment.objects.using('issues_db').create(
+            issue=issue,
+            mobile=data.get('mobile', ''),
+            name=data.get('name', ''),
+            comment=comment_text,
+        )
+        return JsonResponse({
+            'message': 'Comment added',
+            'comment': {
+                'id': comment.id,
+                'name': comment.name,
+                'comment': comment.comment,
+                'created_at': comment.created_at.strftime('%d %b %Y, %I:%M %p'),
+            }
+        })
+    except Issue.DoesNotExist:
+        return JsonResponse({'error': 'Not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def nearby_issues(request):
+    try:
+        lat = float(request.GET.get('lat', 0))
+        lng = float(request.GET.get('lng', 0))
+        radius = float(request.GET.get('radius', 5))  # km, default 5km
+
+        all_issues = Issue.objects.using('issues_db').exclude(latitude=None).exclude(longitude=None)
+        nearby = []
+        for issue in all_issues:
+            dist = haversine(lat, lng, issue.latitude, issue.longitude)
+            if dist <= radius:
+                d = issue_to_dict(issue)
+                d['distance_km'] = round(dist, 2)
+                nearby.append(d)
+
+        nearby.sort(key=lambda x: x['distance_km'])
+        return JsonResponse(nearby, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def civic_points(request):
+    mobile = request.GET.get('mobile', '').strip()
+    if not mobile:
+        return JsonResponse({'error': 'mobile required'}, status=400)
+    try:
+        pts = CivicPoints.objects.using('issues_db').get(mobile=mobile)
+        return JsonResponse({
+            'mobile': pts.mobile,
+            'name': pts.name,
+            'total_points': pts.total_points,
+            'issues_reported': pts.issues_reported,
+            'issues_resolved': pts.issues_resolved,
+            'badge': _get_badge(pts.total_points),
+        })
+    except CivicPoints.DoesNotExist:
+        return JsonResponse({
+            'mobile': mobile, 'name': '', 'total_points': 0,
+            'issues_reported': 0, 'issues_resolved': 0, 'badge': 'Newcomer'})
+
+
+def _get_badge(points):
+    if points >= 500: return 'Champion'
+    if points >= 200: return 'Hero'
+    if points >= 100: return 'Active'
+    if points >= 50: return 'Regular'
+    if points >= 10: return 'Starter'
+    return 'Newcomer'
+
+
+@csrf_exempt
+def leaderboard(request):
+    top = CivicPoints.objects.using('issues_db').order_by('-total_points')[:10]
+    return JsonResponse([{
+        'rank': i + 1,
+        'name': p.name,
+        'mobile': p.mobile[-4:].zfill(10),
+        'total_points': p.total_points,
+        'badge': _get_badge(p.total_points),
+    } for i, p in enumerate(top)], safe=False)
 
 
 @csrf_exempt
@@ -128,14 +316,11 @@ def my_notifications(request):
     if not mobile:
         return JsonResponse({'error': 'mobile required'}, status=400)
     notifs = Notification.objects.using('issues_db').filter(mobile=mobile)
-    data = [{
-        'id': n.id,
-        'message': n.message,
-        'is_read': n.is_read,
+    return JsonResponse([{
+        'id': n.id, 'message': n.message, 'is_read': n.is_read,
         'issue_id': n.issue_id,
         'created_at': n.created_at.strftime('%d %b %Y, %I:%M %p')
-    } for n in notifs]
-    return JsonResponse(data, safe=False)
+    } for n in notifs], safe=False)
 
 
 @csrf_exempt
@@ -152,11 +337,7 @@ def mark_notification_read(request, notif_id):
 def dashboard(request):
     mobile = request.GET.get('mobile', '').strip()
     qs = Issue.objects.using('issues_db').filter(mobile=mobile) if mobile else Issue.objects.using('issues_db').all()
-
-    category_counts = {}
-    for cat_key, _ in Issue.CATEGORY_CHOICES:
-        category_counts[cat_key] = qs.filter(category=cat_key).count()
-
+    category_counts = {cat: qs.filter(category=cat).count() for cat, _ in Issue.CATEGORY_CHOICES}
     return JsonResponse({
         'total': qs.count(),
         'reported': qs.filter(status='REPORTED').count(),

@@ -12,7 +12,6 @@ class Issue(models.Model):
         ('STREET_LIGHT', 'Street Light'),
         ('OTHER', 'Other'),
     ]
-
     STATUS_CHOICES = [
         ('REPORTED', 'Reported'),
         ('IN_PROGRESS', 'In Progress'),
@@ -28,8 +27,12 @@ class Issue(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     image = models.ImageField(upload_to='issues/', null=True, blank=True)
+    extra_images = models.TextField(default='', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REPORTED')
     officer_remarks = models.TextField(null=True, blank=True)
+    rating = models.IntegerField(null=True, blank=True)
+    rating_comment = models.TextField(null=True, blank=True)
+    points_awarded = models.IntegerField(default=10)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,6 +41,27 @@ class Issue(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.mobile})"
+
+
+class StatusHistory(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='history')
+    status = models.CharField(max_length=20)
+    note = models.TextField(default='', blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['changed_at']
+
+
+class IssueComment(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments')
+    mobile = models.CharField(max_length=10, default='')
+    name = models.CharField(max_length=100, default='')
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
 
 
 class Notification(models.Model):
@@ -50,5 +74,13 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+
+class CivicPoints(models.Model):
+    mobile = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=100, default='')
+    total_points = models.IntegerField(default=0)
+    issues_reported = models.IntegerField(default=0)
+    issues_resolved = models.IntegerField(default=0)
+
     def __str__(self):
-        return self.message
+        return f"{self.mobile} - {self.total_points} pts"

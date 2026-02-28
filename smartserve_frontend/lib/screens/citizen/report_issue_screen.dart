@@ -7,6 +7,7 @@ import '../../services/api_service.dart';
 import '../../services/location_service.dart';
 import '../../theme/app_theme.dart';
 import '../maps/map_picker_screen.dart';
+import '../../core/user_session.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   final String selectedLanguage;
@@ -131,16 +132,18 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     setState(() => _submitting = true);
 
     final result = await ApiService.createIssue(
-      name: _nameCtrl.text.trim(),
-      mobile: _mobileCtrl.text.trim(),
-      title: _titleCtrl.text.trim(),
-      category: _selectedCategory,
-      description: _descCtrl.text.trim(),
-      location: _locationCtrl.text.trim(),
-      latitude: _lat,
-      longitude: _lng,
-      image: _selectedImage,
-    );
+  {
+    'name': UserSession.name ?? _nameCtrl.text,
+    'mobile': UserSession.mobile ?? '',
+    'title': _titleCtrl.text.trim(),
+    'category': _selectedCategory,
+    'description': _descCtrl.text.trim(),
+    'location': _locationCtrl.text.trim(),
+    'latitude': _lat?.toString() ?? '',
+    'longitude': _lng?.toString() ?? '',
+  },
+  image: _selectedImage,
+);
 
     setState(() => _submitting = false);
 

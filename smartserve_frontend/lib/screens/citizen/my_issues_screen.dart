@@ -8,6 +8,7 @@ import 'issue_detail_screen.dart';
 class MyIssuesScreen extends StatefulWidget {
   final String selectedLanguage;
   const MyIssuesScreen({Key? key, required this.selectedLanguage}) : super(key: key);
+
   @override
   State<MyIssuesScreen> createState() => _MyIssuesScreenState();
 }
@@ -15,6 +16,12 @@ class MyIssuesScreen extends StatefulWidget {
 class _MyIssuesScreenState extends State<MyIssuesScreen> {
   List<dynamic> _issues = [];
   bool _loading = true;
+  String _selectedCategory = '';
+  String _selectedStatus = '';
+  final _searchCtrl = TextEditingController();
+
+  final _categories = ['', 'ROAD', 'WATER', 'ELECTRICITY', 'SANITATION', 'ENVIRONMENT', 'SAFETY', 'STREET_LIGHT', 'OTHER'];
+  final _statuses = ['', 'REPORTED', 'IN_PROGRESS', 'COMPLETED'];
 
   @override
   void initState() {
@@ -22,9 +29,20 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
     _fetchIssues();
   }
 
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchIssues() async {
     setState(() => _loading = true);
-    final result = await ApiService.getMyIssues(UserSession.mobile ?? '');
+    final result = await ApiService.getMyIssues(
+      UserSession.mobile ?? '',
+      category: _selectedCategory,
+      status: _selectedStatus,
+      search: _searchCtrl.text.trim(),
+    );
     setState(() { _issues = result; _loading = false; });
   }
 
@@ -45,65 +63,149 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
   Widget build(BuildContext context) {
     final lang = widget.selectedLanguage;
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: Text(AppStrings.text("my_issues", lang)),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1565C0), Color(0xFF003c8f)]))),
-        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _fetchIssues)],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _issues.isEmpty
-              ? _emptyState(lang)
-              : RefreshIndicator(
-                  onRefresh: _fetchIssues,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _issues.length,
-                    itemBuilder: (ctx, i) => _issueCard(_issues[i], lang),
-                  ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          // Search bar
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: Theme.of(context).cardColor,
+            child: TextField(
+              controller: _searchCtrl,
+              decoration: InputDecoration(
+                hintText: 'Search issues...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchCtrl.text.isNotEmpty
+                    ? IconButton(icon: const Icon(Icons.clear_rounded),
+                        onPressed: () { _searchCtrl.clear(); _fetchIssues(); })
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              onChanged: (_) => _fetchIssues(),
+            ),
+          ),
+
+          // Filter chips
+          Container(
+            color: Theme.of(context).cardColor,
+            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: [
+                    const Text('Status: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    ..._statuses.map((s) => Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(s.isEmpty ? 'All' : s.replaceAll('_', ' '),
+                            style: const TextStyle(fontSize: 11)),
+                        selected: _selectedStatus == s,
+                        selectedColor: AppTheme.primary.withOpacity(0.2),
+                        onSelected: (_) { setState(() => _selectedStatus = s); _fetchIssues(); },
+                      ),
+                    )).toList(),
+                  ]),
                 ),
+                const SizedBox(height: 6),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: [
+                    const Text('Category: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    ..._categories.map((c) => Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(c.isEmpty ? 'All' : c.replaceAll('_', ' '),
+                            style: const TextStyle(fontSize: 11)),
+                        selected: _selectedCategory == c,
+                        selectedColor: AppTheme.primary.withOpacity(0.2),
+                        onSelected: (_) { setState(() => _selectedCategory = c); _fetchIssues(); },
+                      ),
+                    )).toList(),
+                  ]),
+                ),
+              ],
+            ),
+          ),
+
+          // Issues list
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _issues.isEmpty
+                    ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Icon(Icons.inbox_rounded, size: 70, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text(AppStrings.text("no_issues", lang),
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 15)),
+                      ]))
+                    : RefreshIndicator(
+                        onRefresh: _fetchIssues,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _issues.length,
+                          itemBuilder: (ctx, i) => _issueCard(_issues[i]),
+                        ),
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _issueCard(Map issue, String lang) {
+  Widget _issueCard(Map issue) {
     final status = issue['status'] ?? 'REPORTED';
     final category = issue['category'] ?? 'OTHER';
     final color = AppTheme.getStatusColor(status);
     final catColor = AppTheme.getCategoryColor(category);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => Navigator.push(context, MaterialPageRoute(
-          builder: (_) => IssueDetailScreen(issue: Map<String, dynamic>.from(issue), selectedLanguage: widget.selectedLanguage))),
+          builder: (_) => IssueDetailScreen(
+            issue: Map<String, dynamic>.from(issue),
+            selectedLanguage: widget.selectedLanguage))),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: catColor.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: catColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12)),
               child: Icon(_categoryIcon(category), color: catColor, size: 26),
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(issue['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(issue['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(children: [
                 Icon(Icons.location_on_rounded, size: 12, color: Colors.grey.shade500),
                 const SizedBox(width: 2),
-                Expanded(child: Text(issue['location'] ?? '', style: TextStyle(color: Colors.grey.shade500, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                Expanded(child: Text(issue['location'] ?? '',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                    maxLines: 1, overflow: TextOverflow.ellipsis)),
               ]),
               const SizedBox(height: 4),
               Text(issue['created_at'] ?? '', style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
+              if (issue['rating'] != null) ...[
+                const SizedBox(height: 4),
+                Row(children: List.generate(5, (i) => Icon(
+                  i < (issue['rating'] as int) ? Icons.star_rounded : Icons.star_outline_rounded,
+                  size: 14, color: Colors.amber))),
+              ],
             ])),
             Column(children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                child: Text(status.replaceAll('_', ' '), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20)),
+                child: Text(status.replaceAll('_', ' '),
+                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 6),
               Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
@@ -112,13 +214,5 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
         ),
       ),
     );
-  }
-
-  Widget _emptyState(String lang) {
-    return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(Icons.inbox_rounded, size: 70, color: Colors.grey.shade300),
-      const SizedBox(height: 16),
-      Text(AppStrings.text("no_issues", lang), style: TextStyle(color: Colors.grey.shade500, fontSize: 15)),
-    ]));
   }
 }

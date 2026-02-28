@@ -3,60 +3,32 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // Change this to your PC's IP when testing on physical device via USB/WiFi
-  // For emulator use: 10.0.2.2:8000
-  // For physical device (USB reverse): 127.0.0.1:8000
-  // For physical device (WiFi): 192.168.x.x:8000
   static const String baseUrl = "http://192.168.1.8:8000/api";
 
-  // ─────────────────────────────────────────────
-  //  CREATE ISSUE (with optional image)
-  // ─────────────────────────────────────────────
-  static Future<Map<String, dynamic>> createIssue({
-    required String name,
-    required String mobile,
-    required String title,
-    required String category,
-    required String description,
-    required String location,
-    double? latitude,
-    double? longitude,
-    File? image,
-  }) async {
+  static Map<String, dynamic> _handleResponse(http.Response response) {
     try {
-      final uri = Uri.parse("$baseUrl/issue/create/");
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) return body;
+      return {'error': body['error'] ?? 'Something went wrong'};
+    } catch (e) {
+      return {'error': 'Invalid response: ${response.body}'};
+    }
+  }
 
+  static Future<Map<String, dynamic>> createIssue(Map<String, dynamic> data, {File? image}) async {
+    try {
       if (image != null) {
-        // Multipart request for image upload
-        final request = http.MultipartRequest('POST', uri);
-        request.fields['name'] = name;
-        request.fields['mobile'] = mobile;
-        request.fields['title'] = title;
-        request.fields['category'] = category;
-        request.fields['description'] = description;
-        request.fields['location'] = location;
-        if (latitude != null) request.fields['latitude'] = latitude.toString();
-        if (longitude != null) request.fields['longitude'] = longitude.toString();
-        request.files.add(await http.MultipartFile.fromPath('image', image.path));
-
-        final streamed = await request.send();
+        final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/issue/create/'));
+        data.forEach((k, v) { if (v != null) req.fields[k] = v.toString(); });
+        req.files.add(await http.MultipartFile.fromPath('image', image.path));
+        final streamed = await req.send();
         final response = await http.Response.fromStream(streamed);
         return _handleResponse(response);
       } else {
-        // JSON request
         final response = await http.post(
-          uri,
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
-            "name": name,
-            "mobile": mobile,
-            "title": title,
-            "category": category,
-            "description": description,
-            "location": location,
-            if (latitude != null) "latitude": latitude,
-            if (longitude != null) "longitude": longitude,
-          }),
+          Uri.parse('$baseUrl/issue/create/'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
         );
         return _handleResponse(response);
       }
@@ -65,14 +37,13 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  GET MY ISSUES (filtered by mobile)
-  // ─────────────────────────────────────────────
-  static Future<List<dynamic>> getMyIssues(String mobile) async {
+  static Future<List<dynamic>> getMyIssues(String mobile, {String? category, String? status, String? search}) async {
     try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/issue/my/?mobile=$mobile"),
-      );
+      var params = 'mobile=$mobile';
+      if (category != null && category.isNotEmpty) params += '&category=$category';
+      if (status != null && status.isNotEmpty) params += '&status=$status';
+      if (search != null && search.isNotEmpty) params += '&search=$search';
+      final response = await http.get(Uri.parse('$baseUrl/issue/my/?$params'));
       if (response.statusCode == 200) return jsonDecode(response.body);
       return [];
     } catch (e) {
@@ -80,73 +51,97 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  GET ISSUE DETAIL
-  // ─────────────────────────────────────────────
-  static Future<Map<String, dynamic>?> getIssueDetail(int id) async {
+  static Future<Map<String, dynamic>> getIssueDetail(int id) async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/issue/$id/"));
-      if (response.statusCode == 200) return jsonDecode(response.body);
-      return null;
+      final response = await http.get(Uri.parse('$baseUrl/issue/$id/'));
+      return _handleResponse(response);
     } catch (e) {
-      return null;
+      return {'error': 'Connection failed: $e'};
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  DASHBOARD
-  // ─────────────────────────────────────────────
-  static Future<Map<String, dynamic>> getDashboard({String? mobile}) async {
-    try {
-      final url = mobile != null
-          ? "$baseUrl/dashboard/?mobile=$mobile"
-          : "$baseUrl/dashboard/";
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) return jsonDecode(response.body);
-      return {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  // ─────────────────────────────────────────────
-  //  NOTIFICATIONS
-  // ─────────────────────────────────────────────
-  static Future<List<dynamic>> getNotifications(String mobile) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/notifications/?mobile=$mobile"),
-      );
-      if (response.statusCode == 200) return jsonDecode(response.body);
-      return [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  static Future<bool> markNotificationRead(int id) async {
+  static Future<Map<String, dynamic>> rateIssue(int id, int rating, {String comment = ''}) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/notifications/$id/read/"),
+        Uri.parse('$baseUrl/issue/$id/rate/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'rating': rating, 'comment': comment}),
       );
-      return response.statusCode == 200;
+      return _handleResponse(response);
     } catch (e) {
-      return false;
+      return {'error': 'Connection failed: $e'};
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  HELPER
-  // ─────────────────────────────────────────────
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  static Future<Map<String, dynamic>> addComment(int id, String mobile, String name, String comment) async {
     try {
-      final body = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return body;
-      }
-      return {'error': body['error'] ?? 'Something went wrong'};
+      final response = await http.post(
+        Uri.parse('$baseUrl/issue/$id/comment/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile': mobile, 'name': name, 'comment': comment}),
+      );
+      return _handleResponse(response);
     } catch (e) {
-      return {'error': 'Invalid response: ${response.body}'};
+      return {'error': 'Connection failed: $e'};
+    }
+  }
+
+  static Future<List<dynamic>> getNearbyIssues(double lat, double lng, {double radius = 5}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/issue/nearby/?lat=$lat&lng=$lng&radius=$radius'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> getDashboard({String? mobile}) async {
+    try {
+      final url = mobile != null ? '$baseUrl/dashboard/?mobile=$mobile' : '$baseUrl/dashboard/';
+      final response = await http.get(Uri.parse(url));
+      return _handleResponse(response);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static Future<List<dynamic>> getNotifications(String mobile) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/notifications/?mobile=$mobile'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> markNotificationRead(int id) async {
+    try {
+      final response = await http.post(Uri.parse('$baseUrl/notifications/$id/read/'));
+      return _handleResponse(response);
+    } catch (e) {
+      return {'error': 'Connection failed: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCivicPoints(String mobile) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/civic/points/?mobile=$mobile'));
+      return _handleResponse(response);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static Future<List<dynamic>> getLeaderboard() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/civic/leaderboard/'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }

@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hf*9c#m_*w$2_*w_b&r0&
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', '.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

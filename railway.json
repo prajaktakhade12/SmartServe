@@ -4,8 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate --database=issues_db && python manage.py migrate && gunicorn smartserve_backend.wsgi --bind 0.0.0.0:$PORT",
-    "healthcheckPath": "/api/dashboard/",
+    "startCommand": "gunicorn smartserve_backend.wsgi --bind 0.0.0.0:$PORT",
     "restartPolicyType": "ON_FAILURE"
   }
 }

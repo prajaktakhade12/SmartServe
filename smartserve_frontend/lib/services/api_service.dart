@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://192.168.1.8:8000/api";
+  static const String baseUrl = "http://192.168.1.5:8000/api";
 
   static Map<String, dynamic> _handleResponse(http.Response response) {
     try {

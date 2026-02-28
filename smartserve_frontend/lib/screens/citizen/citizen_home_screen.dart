@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_state.dart';
-import '../../core/user_session.dart';
 import '../../theme/app_theme.dart';
 import '../../core/localization/app_strings.dart';
 import 'report_issue_screen.dart';
@@ -13,7 +12,7 @@ import '../civic/civic_points_screen.dart';
 
 class CitizenHomeScreen extends StatefulWidget {
   final String selectedLanguage;
-  const CitizenHomeScreen({Key? key, required this.selectedLanguage}) : super(key: key);
+  const CitizenHomeScreen({super.key, required this.selectedLanguage}) ;
 
   @override
   State<CitizenHomeScreen> createState() => _CitizenHomeScreenState();

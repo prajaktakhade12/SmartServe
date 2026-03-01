@@ -6,19 +6,25 @@ import math
 
 
 def issue_to_dict(issue):
-    history = [{
-        'status': h.status,
-        'note': h.note,
-        'changed_at': h.changed_at.strftime('%d %b %Y, %I:%M %p')
-    } for h in issue.history.all()]
+    try:
+        history = [{
+            'status': h.status,
+            'note': h.note,
+            'changed_at': h.changed_at.strftime('%d %b %Y, %I:%M %p')
+        } for h in issue.history.all()]
+    except:
+        history = []
 
-    comments = [{
-        'id': c.id,
-        'name': c.name,
-        'mobile': c.mobile,
-        'comment': c.comment,
-        'created_at': c.created_at.strftime('%d %b %Y, %I:%M %p')
-    } for c in issue.comments.all()]
+    try:
+        comments = [{
+            'id': c.id,
+            'name': c.name,
+            'mobile': c.mobile,
+            'comment': c.comment,
+            'created_at': c.created_at.strftime('%d %b %Y, %I:%M %p')
+        } for c in issue.comments.all()]
+    except:
+        comments = []
 
     return {
         'id': issue.id,
@@ -45,7 +51,6 @@ def issue_to_dict(issue):
 
 
 def haversine(lat1, lon1, lat2, lon2):
-    """Calculate distance in km between two coordinates."""
     R = 6371
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
@@ -88,23 +93,32 @@ def create_issue(request):
             image=image,
         )
 
-        # Create status history entry
-        StatusHistory.objects.using('issues_db').create(
-            issue=issue, status='REPORTED', note='Issue reported by citizen')
+        # Create status history - wrapped in try so it doesn't block submission
+        try:
+            StatusHistory.objects.using('issues_db').create(
+                issue=issue, status='REPORTED', note='Issue reported by citizen')
+        except:
+            pass
 
-        # Create notification
-        Notification.objects.using('issues_db').create(
-            mobile=issue.mobile, issue=issue,
-            message=f"Your issue '{issue.title}' has been submitted successfully.")
+        # Create notification - wrapped in try so it doesn't block submission
+        try:
+            Notification.objects.using('issues_db').create(
+                mobile=issue.mobile, issue=issue,
+                message=f"Your issue '{issue.title}' has been submitted successfully.")
+        except:
+            pass
 
-        # Award civic points for reporting
-        points, _ = CivicPoints.objects.using('issues_db').get_or_create(
-            mobile=issue.mobile, defaults={'name': issue.name})
-        points.total_points += 10
-        points.issues_reported += 1
-        if not points.name:
-            points.name = issue.name
-        points.save(using='issues_db')
+        # Award civic points - wrapped in try so it doesn't block submission
+        try:
+            points, _ = CivicPoints.objects.using('issues_db').get_or_create(
+                mobile=issue.mobile, defaults={'name': issue.name})
+            points.total_points += 10
+            points.issues_reported += 1
+            if not points.name:
+                points.name = issue.name
+            points.save(using='issues_db')
+        except:
+            pass
 
         return JsonResponse({'message': 'Issue submitted successfully', 'issue': issue_to_dict(issue)})
 
@@ -159,27 +173,32 @@ def update_status(request, issue_id):
     issue.officer_remarks = data.get('remarks', issue.officer_remarks)
     issue.save(using='issues_db')
 
-    note = data.get('note', '')
-    StatusHistory.objects.using('issues_db').create(
-        issue=issue, status=new_status, note=note)
+    try:
+        note = data.get('note', '')
+        StatusHistory.objects.using('issues_db').create(
+            issue=issue, status=new_status, note=note)
+    except:
+        pass
 
     status_msg = {
         'IN_PROGRESS': f"Your issue '{issue.title}' is now being worked on.",
         'COMPLETED': f"Your issue '{issue.title}' has been resolved!",
     }.get(new_status)
 
-    if status_msg:
-        Notification.objects.using('issues_db').create(
-            mobile=issue.mobile, issue=issue, message=status_msg)
+    try:
+        if status_msg:
+            Notification.objects.using('issues_db').create(
+                mobile=issue.mobile, issue=issue, message=status_msg)
+    except:
+        pass
 
-    # Award points when completed
     if new_status == 'COMPLETED':
         try:
             points = CivicPoints.objects.using('issues_db').get(mobile=issue.mobile)
             points.total_points += 20
             points.issues_resolved += 1
             points.save(using='issues_db')
-        except CivicPoints.DoesNotExist:
+        except:
             pass
 
     return JsonResponse({'message': 'Status updated', 'issue': issue_to_dict(issue)})
@@ -199,12 +218,11 @@ def rate_issue(request, issue_id):
         issue.rating_comment = data.get('comment', '')
         issue.save(using='issues_db')
 
-        # Bonus points for rating
         try:
             points = CivicPoints.objects.using('issues_db').get(mobile=issue.mobile)
             points.total_points += 5
             points.save(using='issues_db')
-        except CivicPoints.DoesNotExist:
+        except:
             pass
 
         return JsonResponse({'message': 'Rating submitted'})
@@ -251,7 +269,7 @@ def nearby_issues(request):
     try:
         lat = float(request.GET.get('lat', 0))
         lng = float(request.GET.get('lng', 0))
-        radius = float(request.GET.get('radius', 5))  # km, default 5km
+        radius = float(request.GET.get('radius', 5))
 
         all_issues = Issue.objects.using('issues_db').exclude(latitude=None).exclude(longitude=None)
         nearby = []
@@ -283,7 +301,7 @@ def civic_points(request):
             'issues_resolved': pts.issues_resolved,
             'badge': _get_badge(pts.total_points),
         })
-    except CivicPoints.DoesNotExist:
+    except:
         return JsonResponse({
             'mobile': mobile, 'name': '', 'total_points': 0,
             'issues_reported': 0, 'issues_resolved': 0, 'badge': 'Newcomer'})
@@ -300,14 +318,17 @@ def _get_badge(points):
 
 @csrf_exempt
 def leaderboard(request):
-    top = CivicPoints.objects.using('issues_db').order_by('-total_points')[:10]
-    return JsonResponse([{
-        'rank': i + 1,
-        'name': p.name,
-        'mobile': p.mobile[-4:].zfill(10),
-        'total_points': p.total_points,
-        'badge': _get_badge(p.total_points),
-    } for i, p in enumerate(top)], safe=False)
+    try:
+        top = CivicPoints.objects.using('issues_db').order_by('-total_points')[:10]
+        return JsonResponse([{
+            'rank': i + 1,
+            'name': p.name,
+            'mobile': p.mobile[-4:].zfill(10),
+            'total_points': p.total_points,
+            'badge': _get_badge(p.total_points),
+        } for i, p in enumerate(top)], safe=False)
+    except:
+        return JsonResponse([], safe=False)
 
 
 @csrf_exempt
@@ -315,12 +336,15 @@ def my_notifications(request):
     mobile = request.GET.get('mobile', '').strip()
     if not mobile:
         return JsonResponse({'error': 'mobile required'}, status=400)
-    notifs = Notification.objects.using('issues_db').filter(mobile=mobile)
-    return JsonResponse([{
-        'id': n.id, 'message': n.message, 'is_read': n.is_read,
-        'issue_id': n.issue_id,
-        'created_at': n.created_at.strftime('%d %b %Y, %I:%M %p')
-    } for n in notifs], safe=False)
+    try:
+        notifs = Notification.objects.using('issues_db').filter(mobile=mobile)
+        return JsonResponse([{
+            'id': n.id, 'message': n.message, 'is_read': n.is_read,
+            'issue_id': n.issue_id,
+            'created_at': n.created_at.strftime('%d %b %Y, %I:%M %p')
+        } for n in notifs], safe=False)
+    except:
+        return JsonResponse([], safe=False)
 
 
 @csrf_exempt
@@ -330,29 +354,35 @@ def mark_notification_read(request, notif_id):
         n.is_read = True
         n.save(using='issues_db')
         return JsonResponse({'message': 'Marked as read'})
-    except Notification.DoesNotExist:
+    except:
         return JsonResponse({'error': 'Not found'}, status=404)
 
 
 def dashboard(request):
-    mobile = request.GET.get('mobile', '').strip()
-    qs = Issue.objects.using('issues_db').filter(mobile=mobile) if mobile else Issue.objects.using('issues_db').all()
-    category_counts = {cat: qs.filter(category=cat).count() for cat, _ in Issue.CATEGORY_CHOICES}
-    return JsonResponse({
-        'total': qs.count(),
-        'reported': qs.filter(status='REPORTED').count(),
-        'in_progress': qs.filter(status='IN_PROGRESS').count(),
-        'completed': qs.filter(status='COMPLETED').count(),
-        'categories': category_counts,
-    })
+    try:
+        mobile = request.GET.get('mobile', '').strip()
+        qs = Issue.objects.using('issues_db').filter(mobile=mobile) if mobile else Issue.objects.using('issues_db').all()
+        category_counts = {cat: qs.filter(category=cat).count() for cat, _ in Issue.CATEGORY_CHOICES}
+        return JsonResponse({
+            'total': qs.count(),
+            'reported': qs.filter(status='REPORTED').count(),
+            'in_progress': qs.filter(status='IN_PROGRESS').count(),
+            'completed': qs.filter(status='COMPLETED').count(),
+            'categories': category_counts,
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 def all_issues(request):
-    category = request.GET.get('category', '').strip().upper()
-    status = request.GET.get('status', '').strip().upper()
-    qs = Issue.objects.using('issues_db').all()
-    if category:
-        qs = qs.filter(category=category)
-    if status:
-        qs = qs.filter(status=status)
-    return JsonResponse([issue_to_dict(i) for i in qs], safe=False)
+    try:
+        category = request.GET.get('category', '').strip().upper()
+        status = request.GET.get('status', '').strip().upper()
+        qs = Issue.objects.using('issues_db').all()
+        if category:
+            qs = qs.filter(category=category)
+        if status:
+            qs = qs.filter(status=status)
+        return JsonResponse([issue_to_dict(i) for i in qs], safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

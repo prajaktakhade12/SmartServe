@@ -8,11 +8,11 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final isLoggedIn = await UserSession.loadSession();
+  await UserSession.logout(); // Forces login screen every time
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState(),
-      child: SmartServeApp(isLoggedIn: isLoggedIn),
+      child: const SmartServeApp(isLoggedIn: false),
     ),
   );
 }
@@ -30,9 +30,7 @@ class SmartServeApp extends StatelessWidget {
       theme: AppTheme.theme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: isLoggedIn
-          ? const CitizenHomeScreen(selectedLanguage: 'en')
-          : const LoginScreen(),
+      home: const LoginScreen(),
     );
   }
 }

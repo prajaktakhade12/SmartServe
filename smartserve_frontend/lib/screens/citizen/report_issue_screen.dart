@@ -11,9 +11,7 @@ import '../../core/user_session.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   final String selectedLanguage;
-
-  const ReportIssueScreen({Key? key, required this.selectedLanguage})
-      : super(key: key);
+  const ReportIssueScreen({Key? key, required this.selectedLanguage}) : super(key: key);
 
   @override
   State<ReportIssueScreen> createState() => _ReportIssueScreenState();
@@ -21,8 +19,6 @@ class ReportIssueScreen extends StatefulWidget {
 
 class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController();
-  final _mobileCtrl = TextEditingController();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
@@ -48,8 +44,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _mobileCtrl.dispose();
     _titleCtrl.dispose();
     _descCtrl.dispose();
     _locationCtrl.dispose();
@@ -75,8 +69,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               width: 40, height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
+                borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -120,8 +113,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not get location. Check permissions.")),
-        );
+          const SnackBar(content: Text("Could not get location. Check permissions.")));
       }
     }
   }
@@ -132,18 +124,18 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     setState(() => _submitting = true);
 
     final result = await ApiService.createIssue(
-  {
-    'name': UserSession.name ?? _nameCtrl.text,
-    'mobile': UserSession.mobile ?? '',
-    'title': _titleCtrl.text.trim(),
-    'category': _selectedCategory,
-    'description': _descCtrl.text.trim(),
-    'location': _locationCtrl.text.trim(),
-    'latitude': _lat?.toString() ?? '',
-    'longitude': _lng?.toString() ?? '',
-  },
-  image: _selectedImage,
-);
+      {
+        'name': UserSession.name ?? '',
+        'mobile': UserSession.mobile ?? '',
+        'title': _titleCtrl.text.trim(),
+        'category': _selectedCategory,
+        'description': _descCtrl.text.trim(),
+        'location': _locationCtrl.text.trim(),
+        'latitude': _lat?.toString() ?? '',
+        'longitude': _lng?.toString() ?? '',
+      },
+      image: _selectedImage,
+    );
 
     setState(() => _submitting = false);
 
@@ -151,11 +143,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
     if (result.containsKey('error')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['error']),
-          backgroundColor: Colors.red,
-        ),
-      );
+        SnackBar(content: Text(result['error']), backgroundColor: Colors.red));
     } else {
       _showSuccessDialog();
       _resetForm();
@@ -163,8 +151,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   }
 
   void _resetForm() {
-    _nameCtrl.clear();
-    _mobileCtrl.clear();
     _titleCtrl.clear();
     _descCtrl.clear();
     _locationCtrl.clear();
@@ -188,21 +174,17 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9),
-                shape: BoxShape.circle,
-              ),
+                color: Color(0xFFE8F5E9), shape: BoxShape.circle),
               child: const Icon(Icons.check_circle_rounded,
                   color: AppTheme.completed, size: 60),
             ),
             const SizedBox(height: 16),
-            Text(
-              AppStrings.text("issue_submitted", lang),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(AppStrings.text("issue_submitted", lang),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('+10 Civic Points Earned! 🌟',
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -210,8 +192,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
+              child: const Text("OK")),
           )
         ],
       ),
@@ -223,56 +204,40 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     final lang = widget.selectedLanguage;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: Text(AppStrings.text("report_issue", lang)),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1565C0), Color(0xFF003c8f)],
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ── Personal Info ──────────────────────
-            _sectionCard(
-              title: "Personal Info",
-              icon: Icons.person_rounded,
-              children: [
-                _buildField(
-                  controller: _nameCtrl,
-                  label: AppStrings.text("name", lang),
-                  icon: Icons.person_outline_rounded,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Name is required' : null,
+            // User info banner
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.primary, AppTheme.primaryDark]),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: Text(
+                    (UserSession.name ?? 'U')[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _mobileCtrl,
-                  label: AppStrings.text("mobile", lang),
-                  icon: Icons.phone_android_rounded,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Mobile is required';
-                    if (v.trim().length != 10) return 'Enter 10-digit number';
-                    return null;
-                  },
-                ),
-              ],
+                const SizedBox(width: 12),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(UserSession.name ?? '',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text('+91 ${UserSession.mobile ?? ''}',
+                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                ]),
+              ]),
             ),
 
             const SizedBox(height: 12),
 
-            // ── Category ──────────────────────────
+            // Category
             _sectionCard(
               title: AppStrings.text("select_category", lang),
               icon: Icons.category_rounded,
@@ -300,14 +265,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         decoration: BoxDecoration(
-                          color: selected
-                              ? color.withOpacity(0.2)
-                              : Colors.grey.shade100,
+                          color: selected ? color.withOpacity(0.2) : Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: selected ? color : Colors.transparent,
-                            width: 2,
-                          ),
+                            color: selected ? color : Colors.transparent, width: 2),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -321,9 +282,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 10,
-                                fontWeight: selected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                                 color: selected ? color : Colors.grey.shade600,
                               ),
                             ),
@@ -338,7 +297,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
             const SizedBox(height: 12),
 
-            // ── Issue Details ─────────────────────
+            // Issue Details
             _sectionCard(
               title: "Issue Details",
               icon: Icons.description_rounded,
@@ -347,8 +306,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   controller: _titleCtrl,
                   label: AppStrings.text("title", lang),
                   icon: Icons.title_rounded,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Title is required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Title is required' : null,
                 ),
                 const SizedBox(height: 14),
                 _buildField(
@@ -356,15 +314,14 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   label: AppStrings.text("description", lang),
                   icon: Icons.notes_rounded,
                   maxLines: 3,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Description is required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Description is required' : null,
                 ),
               ],
             ),
 
             const SizedBox(height: 12),
 
-            // ── Location ──────────────────────────
+            // Location
             _sectionCard(
               title: AppStrings.text("location", lang),
               icon: Icons.location_on_rounded,
@@ -374,77 +331,66 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   label: AppStrings.text("location", lang),
                   icon: Icons.location_on_outlined,
                   readOnly: true,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Location is required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Location is required' : null,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _detectLocation,
-                        icon: const Icon(Icons.my_location_rounded, size: 18),
-                        label: const Text("Current Location", style: TextStyle(fontSize: 12)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.primary,
-                          side: const BorderSide(color: AppTheme.primary),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _detectLocation,
+                      icon: const Icon(Icons.my_location_rounded, size: 18),
+                      label: const Text("Current Location", style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        side: const BorderSide(color: AppTheme.primary),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _pickFromMap,
-                        icon: const Icon(Icons.map_rounded, size: 18),
-                        label: const Text("Select on Map", style: TextStyle(fontSize: 12)),
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _pickFromMap,
+                      icon: const Icon(Icons.map_rounded, size: 18),
+                      label: const Text("Select on Map", style: TextStyle(fontSize: 12)),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ],
             ),
 
             const SizedBox(height: 12),
 
-            // ── Photo ─────────────────────────────
+            // Photo
             _sectionCard(
               title: AppStrings.text("photo", lang),
               icon: Icons.camera_alt_rounded,
               children: [
                 if (_selectedImage != null) ...[
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(_selectedImage!,
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover),
-                      ),
-                      Positioned(
-                        top: 6, right: 6,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedImage = null),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close, color: Colors.white, size: 16),
-                          ),
+                  Stack(children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(_selectedImage!,
+                          height: 160, width: double.infinity, fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      top: 6, right: 6,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedImage = null),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red, shape: BoxShape.circle),
+                          child: const Icon(Icons.close, color: Colors.white, size: 16),
                         ),
-                      )
-                    ],
-                  ),
+                      ),
+                    )
+                  ]),
                   const SizedBox(height: 10),
                 ],
                 SizedBox(
@@ -456,8 +402,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primary,
                       side: const BorderSide(color: AppTheme.primary),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -467,7 +412,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
             const SizedBox(height: 20),
 
-            // ── Submit Button ─────────────────────
+            // Submit Button
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -475,25 +420,14 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: _submitting
                     ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : Text(
-                        AppStrings.text("submit", lang),
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                        height: 22, width: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                    : Text(AppStrings.text("submit", lang),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 24),
@@ -519,14 +453,8 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             Row(children: [
               Icon(icon, color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: AppTheme.primary,
-                ),
-              ),
+              Text(title, style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.primary)),
             ]),
             const Divider(height: 20),
             ...children,
@@ -560,20 +488,16 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         fillColor: Colors.grey.shade50,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
+          borderSide: BorderSide(color: Colors.grey.shade300)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
+          borderSide: BorderSide(color: Colors.grey.shade300)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.primary, width: 2),
-        ),
+          borderSide: const BorderSide(color: AppTheme.primary, width: 2)),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
+          borderSide: const BorderSide(color: Colors.red)),
       ),
     );
   }

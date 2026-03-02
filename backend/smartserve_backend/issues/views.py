@@ -108,17 +108,23 @@ def create_issue(request):
         except:
             pass
 
-        # Award civic points - wrapped in try so it doesn't block submission
+        # Award civic points
         try:
-            points, _ = CivicPoints.objects.using('issues_db').get_or_create(
-                mobile=issue.mobile, defaults={'name': issue.name})
-            points.total_points += 10
-            points.issues_reported += 1
-            if not points.name:
-                points.name = issue.name
-            points.save(using='issues_db')
-        except:
-            pass
+            existing = CivicPoints.objects.using('issues_db').filter(mobile=issue.mobile).first()
+            if existing:
+                existing.total_points = existing.total_points + 10
+                existing.issues_reported = existing.issues_reported + 1
+                existing.save(using='issues_db')
+            else:
+                CivicPoints.objects.using('issues_db').create(
+                    mobile=issue.mobile,
+                    name=issue.name,
+                    total_points=10,
+                    issues_reported=1,
+                    issues_resolved=0,
+                )
+        except Exception as e:
+            print(f"Civic points error: {e}")
 
         return JsonResponse({'message': 'Issue submitted successfully', 'issue': issue_to_dict(issue)})
 

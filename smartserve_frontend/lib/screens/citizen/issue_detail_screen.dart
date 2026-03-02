@@ -288,65 +288,75 @@ ${_issue['description']}
               ),
             ],
 
-            // Comments section
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Comments (${comments.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.primary)),
-                  const SizedBox(height: 12),
+            // Comments section - only visible after officer posts remarks
+            if ((_issue['officer_remarks'] ?? '').isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      const Icon(Icons.question_answer_rounded, color: AppTheme.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Text('Comments on Officer\'s Solution (${comments.length})',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.primary)),
+                    ]),
+                    const SizedBox(height: 4),
+                    const Text('Reply to the officer\'s solution below',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 12),
 
-                  // Add comment
-                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _commentCtrl,
-                        maxLines: 2,
-                        decoration: const InputDecoration(
-                          hintText: 'Add a comment...',
-                          contentPadding: EdgeInsets.all(12),
+                    // Add comment
+                    Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentCtrl,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            hintText: 'Reply to officer\'s solution...',
+                            contentPadding: EdgeInsets.all(12),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _submittingComment ? null : _submitComment,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(14),
-                        shape: const CircleBorder()),
-                      child: _submittingComment
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Icon(Icons.send_rounded, size: 18),
-                    ),
-                  ]),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _submittingComment ? null : _submitComment,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(14),
+                          shape: const CircleBorder()),
+                        child: _submittingComment
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Icons.send_rounded, size: 18),
+                      ),
+                    ]),
 
-                  if (comments.isNotEmpty) ...[
-                    const Divider(height: 24),
-                    ...comments.map((c) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: AppTheme.primary.withOpacity(0.15),
-                          child: Text((c['name'] ?? 'U')[0].toUpperCase(),
-                              style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text(c['name'] ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            Text(c['created_at'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                          ]),
-                          const SizedBox(height: 4),
-                          Text(c['comment'] ?? '', style: const TextStyle(fontSize: 13, height: 1.4)),
-                        ])),
-                      ]),
-                    )).toList(),
-                  ],
-                ]),
+                    if (comments.isNotEmpty) ...[
+                      const Divider(height: 24),
+                      ...comments.map((c) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppTheme.primary.withOpacity(0.15),
+                            child: Text((c['name'] ?? 'U')[0].toUpperCase(),
+                                style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                              Text(c['name'] ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(c['created_at'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                            ]),
+                            const SizedBox(height: 4),
+                            Text(c['comment'] ?? '', style: const TextStyle(fontSize: 13, height: 1.4)),
+                          ])),
+                        ]),
+                      )).toList(),
+                    ],
+                  ]),
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 20),
           ],
         ),

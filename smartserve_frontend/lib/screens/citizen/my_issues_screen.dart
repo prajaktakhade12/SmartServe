@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/app_state.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/user_session.dart';
 import '../../services/api_service.dart';
@@ -61,100 +63,105 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = widget.selectedLanguage;
+    // Use Provider so language updates instantly when toggled
+    final lang = Provider.of<AppState>(context).language;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          // Search bar
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Theme.of(context).cardColor,
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: 'Search issues...',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchCtrl.text.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear_rounded),
-                        onPressed: () { _searchCtrl.clear(); _fetchIssues(); })
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-              onChanged: (_) => _fetchIssues(),
+      body: Column(children: [
+        // Search bar
+        Container(
+          padding: const EdgeInsets.all(12),
+          color: Theme.of(context).cardColor,
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: AppStrings.text('search_issues', lang),
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _searchCtrl.text.isNotEmpty
+                  ? IconButton(icon: const Icon(Icons.clear_rounded),
+                      onPressed: () { _searchCtrl.clear(); _fetchIssues(); })
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
+            onChanged: (_) => _fetchIssues(),
           ),
+        ),
 
-          // Filter chips
-          Container(
-            color: Theme.of(context).cardColor,
-            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(children: [
-                    const Text('Status: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-                    ..._statuses.map((s) => Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        label: Text(s.isEmpty ? 'All' : s.replaceAll('_', ' '),
-                            style: const TextStyle(fontSize: 11)),
-                        selected: _selectedStatus == s,
-                        selectedColor: AppTheme.primary.withOpacity(0.2),
-                        onSelected: (_) { setState(() => _selectedStatus = s); _fetchIssues(); },
-                      ),
-                    )).toList(),
-                  ]),
-                ),
-                const SizedBox(height: 6),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(children: [
-                    const Text('Category: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-                    ..._categories.map((c) => Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        label: Text(c.isEmpty ? 'All' : c.replaceAll('_', ' '),
-                            style: const TextStyle(fontSize: 11)),
-                        selected: _selectedCategory == c,
-                        selectedColor: AppTheme.primary.withOpacity(0.2),
-                        onSelected: (_) { setState(() => _selectedCategory = c); _fetchIssues(); },
-                      ),
-                    )).toList(),
-                  ]),
-                ),
-              ],
+        // Filter chips
+        Container(
+          color: Theme.of(context).cardColor,
+          padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                Text('${AppStrings.text("filter_status", lang)}: ',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                ..._statuses.map((s) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(
+                      s.isEmpty
+                          ? AppStrings.text('all', lang)
+                          : AppStrings.text(s.toLowerCase(), lang),
+                      style: const TextStyle(fontSize: 11)),
+                    selected: _selectedStatus == s,
+                    selectedColor: AppTheme.primary.withOpacity(0.2),
+                    onSelected: (_) { setState(() => _selectedStatus = s); _fetchIssues(); },
+                  ),
+                )).toList(),
+              ]),
             ),
-          ),
+            const SizedBox(height: 6),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                Text('${AppStrings.text("filter_category", lang)}: ',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                ..._categories.map((c) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(
+                      c.isEmpty
+                          ? AppStrings.text('all', lang)
+                          : AppStrings.text(c.toLowerCase(), lang),
+                      style: const TextStyle(fontSize: 11)),
+                    selected: _selectedCategory == c,
+                    selectedColor: AppTheme.primary.withOpacity(0.2),
+                    onSelected: (_) { setState(() => _selectedCategory = c); _fetchIssues(); },
+                  ),
+                )).toList(),
+              ]),
+            ),
+          ]),
+        ),
 
-          // Issues list
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _issues.isEmpty
-                    ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.inbox_rounded, size: 70, color: Colors.grey.shade300),
-                        const SizedBox(height: 16),
-                        Text(AppStrings.text("no_issues", lang),
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 15)),
-                      ]))
-                    : RefreshIndicator(
-                        onRefresh: _fetchIssues,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _issues.length,
-                          itemBuilder: (ctx, i) => _issueCard(_issues[i]),
-                        ),
+        // Issues list
+        Expanded(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _issues.isEmpty
+                  ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(Icons.inbox_rounded, size: 70, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      Text(AppStrings.text("no_issues", lang),
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 15)),
+                    ]))
+                  : RefreshIndicator(
+                      onRefresh: _fetchIssues,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _issues.length,
+                        itemBuilder: (ctx, i) => _issueCard(_issues[i], lang),
                       ),
-          ),
-        ],
-      ),
+                    ),
+        ),
+      ]),
     );
   }
 
-  Widget _issueCard(Map issue) {
+  Widget _issueCard(Map issue, String lang) {
     final status = issue['status'] ?? 'REPORTED';
     final category = issue['category'] ?? 'OTHER';
     final color = AppTheme.getStatusColor(status);
@@ -166,7 +173,7 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
         onTap: () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => IssueDetailScreen(
             issue: Map<String, dynamic>.from(issue),
-            selectedLanguage: widget.selectedLanguage))),
+            selectedLanguage: lang))),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(children: [
@@ -179,7 +186,8 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(issue['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              Text(issue['title'] ?? '',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(children: [
@@ -190,7 +198,8 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
                     maxLines: 1, overflow: TextOverflow.ellipsis)),
               ]),
               const SizedBox(height: 4),
-              Text(issue['created_at'] ?? '', style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
+              Text(issue['created_at'] ?? '',
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
               if (issue['rating'] != null) ...[
                 const SizedBox(height: 4),
                 Row(children: List.generate(5, (i) => Icon(
@@ -204,8 +213,9 @@ class _MyIssuesScreenState extends State<MyIssuesScreen> {
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20)),
-                child: Text(status.replaceAll('_', ' '),
-                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(
+                  AppStrings.text(status.toLowerCase(), lang),
+                  style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 6),
               Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),

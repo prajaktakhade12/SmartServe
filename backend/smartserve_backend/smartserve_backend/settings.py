@@ -73,7 +73,7 @@ DATABASES = {
     },
 }
 
-DATABASE_ROUTERS = ['issues.db_router.IssuesRouter']
+# DATABASE_ROUTERS removed - using explicit .using() calls instead
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

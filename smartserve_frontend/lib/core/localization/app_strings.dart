@@ -1,13 +1,10 @@
 class AppStrings {
   static const Map<String, Map<String, String>> _localized = {
     "en": {
-      // Navigation
       "report": "Report",
       "dashboard": "Dashboard",
       "my_issues": "My Issues",
       "notifications": "Notifications",
-
-      // Report Issue Screen
       "report_issue": "Report Issue",
       "name": "Full Name *",
       "mobile": "Mobile Number *",
@@ -19,8 +16,6 @@ class AppStrings {
       "select_map": "Select on Map",
       "photo": "Add Photo",
       "issue_submitted": "Issue submitted successfully!",
-
-      // Categories
       "road": "Road",
       "water": "Water",
       "electricity": "Electricity",
@@ -29,32 +24,45 @@ class AppStrings {
       "safety": "Safety",
       "street_light": "Street Light",
       "other": "Other",
-
-      // Dashboard
       "total": "Total",
       "reported": "Reported",
       "in_progress": "In Progress",
       "completed": "Completed",
-
-      // My Issues
       "no_issues": "No issues found",
       "search_issues": "Search issues...",
       "filter_status": "Status",
       "filter_category": "Category",
       "all": "All",
-
-      // Language
       "select_language": "Select Language",
       "change_language": "Language",
+      // Civic Points
+      "civic_points": "Civic Points",
+      "my_points": "My Points",
+      "leaderboard": "Leaderboard",
+      "total_points": "Total Points",
+      "issues_reported": "Issues Reported",
+      "issues_resolved": "Issues Resolved",
+      "how_to_earn": "How to Earn Points",
+      "earn_report": "Report an issue",
+      "earn_resolved": "Issue gets resolved",
+      "earn_rate": "Rate a resolved issue",
+      "badge_progress": "Badge Progress",
+      "no_leaderboard": "No leaderboard data yet",
+      "could_not_load": "Could not load points",
+      "try_again": "Try Again",
+      // Badges
+      "Newcomer": "Newcomer",
+      "Starter": "Starter",
+      "Regular": "Regular",
+      "Active": "Active",
+      "Hero": "Hero",
+      "Champion": "Champion",
     },
     "hi": {
-      // Navigation
       "report": "रिपोर्ट",
       "dashboard": "डैशबोर्ड",
       "my_issues": "मेरी शिकायतें",
       "notifications": "सूचनाएं",
-
-      // Report Issue Screen
       "report_issue": "शिकायत दर्ज करें",
       "name": "पूरा नाम *",
       "mobile": "मोबाइल नंबर *",
@@ -66,8 +74,6 @@ class AppStrings {
       "select_map": "मानचित्र पर चुनें",
       "photo": "फोटो जोड़ें",
       "issue_submitted": "शिकायत सफलतापूर्वक दर्ज हुई!",
-
-      // Categories
       "road": "सड़क",
       "water": "पानी",
       "electricity": "बिजली",
@@ -76,32 +82,45 @@ class AppStrings {
       "safety": "सुरक्षा",
       "street_light": "स्ट्रीट लाइट",
       "other": "अन्य",
-
-      // Dashboard
       "total": "कुल",
       "reported": "रिपोर्टेड",
       "in_progress": "प्रगति में",
       "completed": "पूर्ण",
-
-      // My Issues
       "no_issues": "कोई शिकायत नहीं मिली",
       "search_issues": "शिकायतें खोजें...",
       "filter_status": "स्थिति",
       "filter_category": "श्रेणी",
       "all": "सभी",
-
-      // Language
       "select_language": "भाषा चुनें",
       "change_language": "भाषा",
+      // Civic Points
+      "civic_points": "नागरिक अंक",
+      "my_points": "मेरे अंक",
+      "leaderboard": "लीडरबोर्ड",
+      "total_points": "कुल अंक",
+      "issues_reported": "दर्ज शिकायतें",
+      "issues_resolved": "हल शिकायतें",
+      "how_to_earn": "अंक कैसे कमाएं",
+      "earn_report": "शिकायत दर्ज करें",
+      "earn_resolved": "शिकायत हल हो",
+      "earn_rate": "हल को रेटिंग दें",
+      "badge_progress": "बैज प्रगति",
+      "no_leaderboard": "अभी कोई डेटा नहीं",
+      "could_not_load": "अंक लोड नहीं हो सके",
+      "try_again": "फिर कोशिश करें",
+      // Badges
+      "Newcomer": "नवागंतुक",
+      "Starter": "शुरुआती",
+      "Regular": "नियमित",
+      "Active": "सक्रिय",
+      "Hero": "हीरो",
+      "Champion": "चैंपियन",
     },
     "mr": {
-      // Navigation
       "report": "तक्रार",
       "dashboard": "डॅशबोर्ड",
       "my_issues": "माझ्या तक्रारी",
       "notifications": "सूचना",
-
-      // Report Issue Screen
       "report_issue": "तक्रार नोंदवा",
       "name": "पूर्ण नाव *",
       "mobile": "मोबाईल नंबर *",
@@ -113,8 +132,6 @@ class AppStrings {
       "select_map": "नकाशावर निवडा",
       "photo": "फोटो जोडा",
       "issue_submitted": "तक्रार यशस्वीरित्या नोंदवली!",
-
-      // Categories
       "road": "रस्ता",
       "water": "पाणी",
       "electricity": "वीज",
@@ -123,23 +140,39 @@ class AppStrings {
       "safety": "सुरक्षा",
       "street_light": "पथदीप",
       "other": "इतर",
-
-      // Dashboard
       "total": "एकूण",
       "reported": "नोंदवले",
       "in_progress": "प्रगतीत",
       "completed": "पूर्ण",
-
-      // My Issues
       "no_issues": "कोणतीही तक्रार आढळली नाही",
       "search_issues": "तक्रारी शोधा...",
       "filter_status": "स्थिती",
       "filter_category": "श्रेणी",
       "all": "सर्व",
-
-      // Language
       "select_language": "भाषा निवडा",
       "change_language": "भाषा",
+      // Civic Points
+      "civic_points": "नागरी गुण",
+      "my_points": "माझे गुण",
+      "leaderboard": "लीडरबोर्ड",
+      "total_points": "एकूण गुण",
+      "issues_reported": "नोंदवलेल्या तक्रारी",
+      "issues_resolved": "सोडवलेल्या तक्रारी",
+      "how_to_earn": "गुण कसे मिळवायचे",
+      "earn_report": "तक्रार नोंदवा",
+      "earn_resolved": "तक्रार सोडवली जाते",
+      "earn_rate": "सोडवलेल्याला रेटिंग द्या",
+      "badge_progress": "बॅज प्रगती",
+      "no_leaderboard": "अद्याप कोणताही डेटा नाही",
+      "could_not_load": "गुण लोड होऊ शकले नाही",
+      "try_again": "पुन्हा प्रयत्न करा",
+      // Badges
+      "Newcomer": "नवखा",
+      "Starter": "सुरुवातीचा",
+      "Regular": "नियमित",
+      "Active": "सक्रिय",
+      "Hero": "हीरो",
+      "Champion": "चॅम्पियन",
     }
   };
 

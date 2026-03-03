@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_state.dart';
 import '../../core/user_session.dart';
 import '../../services/api_service.dart';
+import '../../core/localization/app_strings.dart';
 import '../../theme/app_theme.dart';
 
 class CivicPointsScreen extends StatefulWidget {
@@ -84,7 +85,7 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Civic Points'),
+        title: Text(AppStrings.text('civic_points', lang)),
         flexibleSpace: Container(decoration: const BoxDecoration(
           gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark]))),
         actions: [
@@ -99,9 +100,9 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
-          tabs: const [
-            Tab(text: 'My Points'),
-            Tab(text: 'Leaderboard'),
+          tabs: [
+            Tab(text: AppStrings.text('my_points', lang)),
+            Tab(text: AppStrings.text('leaderboard', lang)),
           ],
         ),
       ),
@@ -111,12 +112,12 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.error_outline_rounded, size: 60, color: Colors.red.shade300),
                   const SizedBox(height: 16),
-                  Text('Could not load points', style: TextStyle(color: Colors.grey.shade600)),
+                  Text(AppStrings.text('could_not_load', lang), style: TextStyle(color: Colors.grey.shade600)),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: _load,
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Try Again'),
+                    label: Text(AppStrings.text('try_again', lang)),
                   ),
                 ]))
               : TabBarView(
@@ -151,8 +152,8 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
                               Text('${_points['total_points'] ?? 0}',
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 52, fontWeight: FontWeight.bold)),
-                              const Text('Total Points',
-                                  style: TextStyle(color: Colors.white70, fontSize: 14)),
+                              Text(AppStrings.text('total_points', lang),
+                                  style: const TextStyle(color: Colors.white70, fontSize: 14)),
                               const SizedBox(height: 8),
                               Text('${UserSession.name ?? ''}',
                                   style: const TextStyle(color: Colors.white70, fontSize: 13)),
@@ -163,12 +164,12 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
                           // Stats grid
                           Row(children: [
                             Expanded(child: _statCard(
-                              Icons.report_rounded, 'Issues Reported',
+                              Icons.report_rounded, AppStrings.text('issues_reported', lang),
                               '${_points['issues_reported'] ?? 0}',
                               Colors.blue, Colors.blue.shade50)),
                             const SizedBox(width: 12),
                             Expanded(child: _statCard(
-                              Icons.check_circle_rounded, 'Issues Resolved',
+                              Icons.check_circle_rounded, AppStrings.text('issues_resolved', lang),
                               '${_points['issues_resolved'] ?? 0}',
                               Colors.green, Colors.green.shade50)),
                           ]),
@@ -179,13 +180,13 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                const Text('How to Earn Points',
+                                Text(AppStrings.text('how_to_earn', lang),
                                     style: TextStyle(fontWeight: FontWeight.bold,
                                         fontSize: 15, color: AppTheme.primary)),
                                 const SizedBox(height: 14),
-                                _earnRow(Icons.add_circle_rounded, 'Report an issue', '+10 pts', Colors.blue),
-                                _earnRow(Icons.check_circle_rounded, 'Issue gets resolved', '+20 pts', Colors.green),
-                                _earnRow(Icons.star_rounded, 'Rate a resolved issue', '+5 pts', Colors.amber),
+                                _earnRow(Icons.add_circle_rounded, AppStrings.text('earn_report', lang), '+10 pts', Colors.blue),
+                                _earnRow(Icons.check_circle_rounded, AppStrings.text('earn_resolved', lang), '+20 pts', Colors.green),
+                                _earnRow(Icons.star_rounded, AppStrings.text('earn_rate', lang), '+5 pts', Colors.amber),
                               ]),
                             ),
                           ),
@@ -197,16 +198,16 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                const Text('Badge Progress',
+                                Text(AppStrings.text('badge_progress', lang),
                                     style: TextStyle(fontWeight: FontWeight.bold,
                                         fontSize: 15, color: AppTheme.primary)),
                                 const SizedBox(height: 14),
-                                _badgeProgressRow('Newcomer', 0, Colors.grey),
-                                _badgeProgressRow('Starter', 10, Colors.teal),
-                                _badgeProgressRow('Regular', 50, Colors.green),
-                                _badgeProgressRow('Active', 100, Colors.blue),
-                                _badgeProgressRow('Hero', 200, Colors.orange),
-                                _badgeProgressRow('Champion', 500, Colors.purple),
+                                _badgeProgressRow(AppStrings.text('Newcomer', lang), 0, Colors.grey),
+                                _badgeProgressRow(AppStrings.text('Starter', lang), 10, Colors.teal),
+                                _badgeProgressRow(AppStrings.text('Regular', lang), 50, Colors.green),
+                                _badgeProgressRow(AppStrings.text('Active', lang), 100, Colors.blue),
+                                _badgeProgressRow(AppStrings.text('Hero', lang), 200, Colors.orange),
+                                _badgeProgressRow(AppStrings.text('Champion', lang), 500, Colors.purple),
                               ]),
                             ),
                           ),
@@ -221,7 +222,7 @@ class _CivicPointsScreenState extends State<CivicPointsScreen>
                           ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                               Icon(Icons.leaderboard_rounded, size: 60, color: Colors.grey.shade300),
                               const SizedBox(height: 16),
-                              Text('No leaderboard data yet',
+                              Text(AppStrings.text('no_leaderboard', lang),
                                   style: TextStyle(color: Colors.grey.shade500)),
                             ]))
                           : ListView.builder(

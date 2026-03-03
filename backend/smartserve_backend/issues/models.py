@@ -30,6 +30,11 @@ class Issue(models.Model):
     extra_images = models.TextField(default='', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REPORTED')
     officer_remarks = models.TextField(null=True, blank=True)
+    solver_name = models.CharField(max_length=100, null=True, blank=True)
+    solver_mobile = models.CharField(max_length=10, null=True, blank=True)
+    solver_designation = models.CharField(max_length=100, null=True, blank=True)
+    work_done = models.TextField(null=True, blank=True)
+    resolution_date = models.DateField(null=True, blank=True)
     rating = models.IntegerField(null=True, blank=True)
     rating_comment = models.TextField(null=True, blank=True)
     points_awarded = models.IntegerField(default=10)
@@ -84,3 +89,36 @@ class CivicPoints(models.Model):
 
     def __str__(self):
         return f"{self.mobile} - {self.total_points} pts"
+
+
+
+
+
+class Officer(models.Model):
+    ROLE_CHOICES = [
+        ('officer', 'Officer'),
+        ('head', 'Head'),
+    ]
+    CATEGORY_CHOICES = [
+        ('HEAD', 'Head - All Categories'),
+        ('ROAD', 'Road'),
+        ('WATER', 'Water'),
+        ('ELECTRICITY', 'Electricity'),
+        ('SANITATION', 'Sanitation'),
+        ('ENVIRONMENT', 'Environment'),
+        ('SAFETY', 'Safety'),
+        ('STREET_LIGHT', 'Street Light'),
+        ('OTHER', 'Other'),
+    ]
+
+    username = models.CharField(max_length=50, unique=True)
+    password = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='officer')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+

@@ -30,6 +30,16 @@ class Issue(models.Model):
     extra_images = models.TextField(default='', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REPORTED')
     officer_remarks = models.TextField(null=True, blank=True)
+
+    # Category-wise issue number — e.g. WATER-001, ROAD-003
+    # Counts independently per category, resets when DB is cleared
+    category_issue_no = models.IntegerField(default=0)
+    display_id = models.CharField(max_length=20, default='')  # e.g. "WATER-001"
+
+    # Tracks which officer last updated/handled this issue
+    assigned_officer_id = models.IntegerField(null=True, blank=True)
+    assigned_officer_name = models.CharField(max_length=100, null=True, blank=True)
+
     solver_name = models.CharField(max_length=100, null=True, blank=True)
     solver_mobile = models.CharField(max_length=10, null=True, blank=True)
     solver_designation = models.CharField(max_length=100, null=True, blank=True)
@@ -91,13 +101,11 @@ class CivicPoints(models.Model):
         return f"{self.mobile} - {self.total_points} pts"
 
 
-
-
-
 class Officer(models.Model):
     ROLE_CHOICES = [
         ('officer', 'Officer'),
-        ('head', 'Head'),
+        ('dept_head', 'Department Head'),
+        ('head', 'Overall Head'),
     ]
     CATEGORY_CHOICES = [
         ('HEAD', 'Head - All Categories'),
@@ -116,9 +124,9 @@ class Officer(models.Model):
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='officer')
+    # Job title/designation for display e.g. "Pipe Repair Engineer"
+    designation = models.CharField(max_length=100, default='Field Officer')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} ({self.category})"
-
-
+        return f"{self.name} ({self.category} - {self.role})"

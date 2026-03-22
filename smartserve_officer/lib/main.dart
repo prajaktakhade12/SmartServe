@@ -10,9 +10,20 @@ void main() async {
   runApp(SmartServeOfficerApp(isLoggedIn: isLoggedIn));
 }
 
-class SmartServeOfficerApp extends StatelessWidget {
+class SmartServeOfficerApp extends StatefulWidget {
   final bool isLoggedIn;
   const SmartServeOfficerApp({super.key, required this.isLoggedIn});
+
+  @override
+  State<SmartServeOfficerApp> createState() => _SmartServeOfficerAppState();
+}
+
+class _SmartServeOfficerAppState extends State<SmartServeOfficerApp> {
+  String _language = 'en'; // 'en', 'hi', 'mr'
+
+  void _onLanguageChanged(String lang) {
+    setState(() => _language = lang);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +31,15 @@ class SmartServeOfficerApp extends StatelessWidget {
       title: 'SmartServe Officer',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
+      home: widget.isLoggedIn
+          ? HomeScreen(
+              language: _language,
+              onLanguageChanged: _onLanguageChanged,
+            )
+          : LoginScreen(
+              onLanguageChanged: _onLanguageChanged,
+              language: _language,
+            ),
     );
   }
 }
